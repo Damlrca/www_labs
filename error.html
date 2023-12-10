@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Lab2_fi3_Sadikov</title>
+		<meta name="author" compact="Sadikov Damir">
+		<meta charset="UTF-8">
+		
+		<script type="application/javascript" defer>
+			function print_error() {
+				const queryString = window.location.search;
+				const urlParams = new URLSearchParams(queryString);
+				let error = "unknown error";
+				if (urlParams.has("error")) {
+					error = urlParams.get("error");
+				}
+				let my_p = document.getElementById("my_p");
+				my_p.appendChild(document.createTextNode(error));
+			}
+		
+			window.addEventListener("load", print_error);
+		</script>
+	</head>
+	<body>
+		<h1>Война Вирусов!</h1>
+		
+		<h2>Ошибка!</h2>
+		
+		<p id = "my_p">
+		
+		</p>
+		
+		<p>
+			<a href="/">Начальная страница</a>
+		</p>
+		
+		
+	</body>
+</html>
