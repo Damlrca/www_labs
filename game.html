@@ -6,6 +6,7 @@
 		<meta charset="UTF-8">
 		
 		<style>
+			.class0 { height:30px; width:30px; }
 			.class1 { height:30px; width:30px; background-color:lightBlue; }
 			.class2 { height:30px; width:30px; background-color:red; }
 			
@@ -23,26 +24,25 @@
 		<script type="application/javascript" defer>
 			function create_table() {
 				let myTable = document.getElementById("myTable");
-				console.log(myTable);
 				for (let i = 0; i < 10; i++) {
 					let newLine = document.createElement("tr");
 					for (let j = 0; j < 10; j++) {
 						let newElem = document.createElement("td");
 						newElem.id = "e_" + i + "_" + j;
 						newElem.align = "center";
-						newElem.classList.add("class1");
-						newElem.AAAAX = i;
-						newElem.AAAAY = j;
+						newElem.classList.add("class2");
+						newElem.coordX = i;
+						newElem.coordY = j;
+						/*
 						if ((i + j) % 2 == 0) {
 							newElem.classList.add("class1");
 						}
 						else {
 							newElem.classList.add("class2");
 						}
+						*/
 						newElem.onclick = function() {
-							//myfunction(this.id);
-							myfunction({X:this.AAAAX, Y:this.AAAAY});
-							//myfunction(JSON.stringify({X:this.AAAAX, Y:this.AAAAY}));
+							sendData({type:"player_move", coordX: this.coordX, coordY: this.coordY});
 						};
 						newElem.appendChild(document.createTextNode("X"));
 						newLine.appendChild(newElem);
@@ -51,11 +51,28 @@
 				}
 			}
 			
-			create_table();
+			function changeTable(table) {
+				for (let i = 0; i < 10; i++) {
+					for (let j = 0; j < 10; j++) {
+						let s = "e_" + i + "_" + j;
+						let elem = document.getElementById(s);
+						if (table[s] == 0) {
+							elem.className = "class1";
+						}
+						else if (table[s] == 1) {
+							elem.className = "class2";
+						}
+						else {
+							console.log(table[s]);
+						}
+					}
+				}
+			}
 			
 			let socket = new WebSocket("ws://localhost:8181/ws");
 			socket.onopen = function() {
-				console.log("Соединение установлено.");
+				console.log("Соединение установлено.\nЗапрос текущей таблицы.");
+				sendData({type:"table_request"});
 			};
 			socket.onclose = function(event) {
 				if (event.wasClean) {
@@ -66,21 +83,29 @@
 				}
 				console.log("Код: " + event.code + " причина: " + event.reason);
 			};
+			// RECIEVE DATA
 			socket.onmessage = function(event) {
 				console.log("Полученные данные: " + event.data);
-				let message_JSON = JSON.parse(event.data);
-				console.log("x=" + message_JSON.X + " y=" + message_JSON.Y);
-				// TODO получение данных
+				let mes = JSON.parse(event.data);
+				changeTable(mes);
+				//if (mes.type == "table_request") {
+				//	console.log("it's just need table bruh");
+				//}
+				//else if (mes.type == "player_move") {
+				//	console.log("X = " + mes.coordX + "\ny = " + mes.coordY);
+				//}
 			}
 			socket.onerror = function(error) {
 				console.log("Ошибка: " + error.message);
 			};
 			
-			function myfunction(elem) {
-				// TODO отправка данных
-				//alert(elem);
-				socket.send(JSON.stringify(elem));
+			// SEND DATA
+			function sendData(data) {
+				console.log("sending: " + JSON.stringify(data));
+				socket.send(JSON.stringify(data));
 			}
+			
+			create_table();
 		</script>
 	</body>
 </html>

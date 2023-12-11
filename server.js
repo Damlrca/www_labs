@@ -1,3 +1,31 @@
+
+let gameState = 0;
+// Состояния игры
+// 0 - Игра не началась
+// 1 - Присоединился первый игрок
+// 2 - Присоединился второй игрок (Игра началась)
+let firstPlayer = "";
+let secondPlayer = "";
+// Поле
+let gameTable = {};
+
+function initGameTable() {
+	for (let i = 0; i < 10; i++) {
+		for (let j = 0; j < 10; j++) {
+			gameTable["e_" + i + "_" + j] = 0;
+		}
+	}
+	//console.log(gameTable);
+}
+
+function gameMove(x, y) {
+	gameTable["e_" + x + "_" + y] = 1;
+}
+
+initGameTable();
+
+
+
 const express = require("express");
 const http = require("http");
 const fs = require("fs");
@@ -23,17 +51,26 @@ wss.on("connection", function connection(ws, req) {
 	console.log("new client connected " + instance);
 	console.log("cookie: " + req.headers.cookie)
 	const callback = function(message) {
-		console.log("in callback: message=" + message);
-		console.log("aaaa: message=" + message);
-		ws.send(String(message));
-		console.log("sending to client... " + instance);
+		//console.log("in callback: message = " + message);
+		//ws.send(String(message));
+		//console.log("sending to client... " + instance);
+		console.log("in callback: gameTable = XXX")
+		console.log("sending table to client... " + instance);
+		ws.send(JSON.stringify(message));
 	}
 	messageEmitter.on("newmessage", callback);
 	ws.on("message", function incoming(message) {
 		console.log("recieved: " + message);
-		let message_JSON = JSON.parse(message);
-		console.log("x=" + message_JSON.X + " y=" + message_JSON.Y);
-		messageEmitter.emit("newmessage", message)
+		let mes = JSON.parse(message);
+		if (mes.type == "table_request") {
+			console.log("it's just need table bruh");
+		}
+		else if (mes.type == "player_move") {
+			console.log("X = " + mes.coordX + "\ny = " + mes.coordY);
+			gameMove(mes.coordX, mes.coordY);
+		}
+		//messageEmitter.emit("newmessage", message);
+		messageEmitter.emit("newmessage", gameTable);
 	});
 	ws.on("close", function close() {
 		console.log("socket closed for client " + instance);
@@ -51,12 +88,6 @@ function updatePlayerCookie(req, res) {
 		req.cookies["player"] = player;
 	}
 }
-
-let gameState = 0; // 0 - Игра не началась
-// 1 - Присоединился первый игрок
-// 2 - Присоединился второй игрок (Игра началась)
-let firstPlayer = "";
-let secondPlayer = "";
 
 app.get("/", function(req, res) {
 	data = fs.readFileSync("index.html");
