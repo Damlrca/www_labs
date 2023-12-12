@@ -5,11 +5,15 @@ let gameState = 0;
 // 2 - Присоединился второй игрок (Игра началась)
 let gameStatus = "in process"; // "in process", "result"
 let winner = "";
-let move = 0;
 let firstPlayer = "";
 let secondPlayer = "";
 // Поле
 let gameTable = {};
+let firstPlayerCanMoveHere = {};
+let secondPlayerCanMoveHere = {};
+let move = 0;
+let dx = [ -1, -1, -1,  0,  0,  1,  1,  1];
+let dy = [ -1,  0,  1, -1,  1, -1,  0,  1];
 
 function elemName(i, j) {
 	return "e_" + i + "_" + j;
@@ -29,9 +33,89 @@ function initGameTable() {
 	}
 }
 
+function firstDFS(x, y) {
+	firstPlayerCanMoveHere[elemName(x, y)] = 1;
+	for (let i = 0; i < 8; i++) {
+		let X = x + dx[i], Y = y + dy[i];
+		if (0 <= X && X < 10 && 0 <= Y && Y < 10) {
+			console.log("aaaa");
+			if (firstPlayerCanMoveHere[elemName(X, Y)] == 0) {
+				if (gameTable[elemName(X, Y)] == 0 || gameTable[elemName(X, Y)] == 3) {
+					firstPlayerCanMoveHere[elemName(X, Y)] = 1;
+				}
+				if (gameTable[elemName(X, Y)] == 1 || gameTable[elemName(X, Y)] == 4) {
+					firstDFS(X, Y);
+				}
+			}
+		}
+	}
+}
+
+function secondDFS(x, y) {
+	secondPlayerCanMoveHere[elemName(x, y)] = 1;
+	for (let i = 0; i < 8; i++) {
+		let X = x + dx[i], Y = y + dy[i];
+		if (0 <= X && X < 10 && 0 <= Y && Y < 10) {
+			if (secondPlayerCanMoveHere[elemName(X, Y)] == 0) {
+				if (gameTable[elemName(X, Y)] == 0 || gameTable[elemName(X, Y)] == 1) {
+					secondPlayerCanMoveHere[elemName(X, Y)] = 1;
+				}
+				if (gameTable[elemName(X, Y)] == 3 || gameTable[elemName(X, Y)] == 2) {
+					secondDFS(X, Y);
+				}
+			}
+		}
+	}
+}
+
 function gameMove(x, y) {
-	gameTable[elemName(x, y)]++;
-	gameTable[elemName(x, y)] %= 5;
+	for (let i = 0; i < 10; i++) {
+		for (let j = 0; j < 10; j++) {
+			firstPlayerCanMoveHere[elemName(i, j)] = 0;
+			secondPlayerCanMoveHere[elemName(i, j)] = 0;
+		}
+	}
+	if (gameTable[elemName(0, 0)] == 0) firstPlayerCanMoveHere[elemName(0, 0)] = 1;
+	for (let i = 0; i < 10; i++) {
+		for (let j = 0; j < 10; j++) {
+			if (firstPlayerCanMoveHere[elemName(i, j)] == 0 && gameTable[elemName(i, j)] == 1) {
+				firstDFS(i, j);
+			}
+		}
+	}
+	if (gameTable[elemName(9, 9)] == 0) secondPlayerCanMoveHere[elemName(9, 9)] = 1;
+	for (let i = 0; i < 10; i++) {
+		for (let j = 0; j < 10; j++) {
+			if (secondPlayerCanMoveHere[elemName(i, j)] == 0 && gameTable[elemName(i, j)] == 3) {
+				secondDFS(i, j);
+			}
+		}
+	}
+	console.log(firstPlayerCanMoveHere);
+	if (move < 3) {
+		if (firstPlayerCanMoveHere[elemName(x, y)] == 1) {
+			if (gameTable[elemName(x, y)] == 0) {
+				gameTable[elemName(x, y)] = 1;
+				move = (move + 1) % 6;
+			}
+			else if (gameTable[elemName(x, y)] == 3) {
+				gameTable[elemName(x, y)] = 4;
+				move = (move + 1) % 6;
+			}
+		}
+	}
+	else {
+		if (secondPlayerCanMoveHere[elemName(x, y)] == 1 && gameTable[elemName(x, y)] != 3) {
+			if (gameTable[elemName(x, y)] == 0) {
+				gameTable[elemName(x, y)] = 3;
+				move = (move + 1) % 6;
+			}
+			else if (gameTable[elemName(x, y)] == 1) {
+				gameTable[elemName(x, y)] = 2;
+				move = (move + 1) % 6;
+			}
+		}
+	}
 }
 
 initGameTable();
@@ -75,7 +159,17 @@ wss.on("connection", function connection(ws, req) {
 			console.log(mes.type + " from " + req.headers.cookie);
 			if (mes.type == "player_move") {
 				console.log("X = " + mes.coordX + "; y = " + mes.coordY + ";");
-				gameMove(mes.coordX, mes.coordY);
+				if (move < 3) {
+					if (req.headers.cookie == "player=" + firstPlayer) {
+						gameMove(mes.coordX, mes.coordY);
+					}
+				}
+				else {
+					if (req.headers.cookie == "player=" + secondPlayer) {
+						gameMove(mes.coordX, mes.coordY);
+					}
+				}
+				
 			}
 			let res = {type:"table", table:gameTable, gameStatus:gameStatus};
 			if (gameStatus == "result") {
