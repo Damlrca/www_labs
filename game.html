@@ -6,10 +6,11 @@
 		<meta charset="UTF-8">
 		
 		<style>
-			.class0 { height:30px; width:30px; }
-			.class1 { height:30px; width:30px; background-color:lightBlue; }
-			.class2 { height:30px; width:30px; background-color:red; }
-			
+			.class0 { height:30px; width:30px; color:black; background-color:white; }
+			.class1 { height:30px; width:30px; color:royalBlue; background-color:white; }
+			.class2 { height:30px; width:30px; color:royalBlue; background-color:crimson; }
+			.class3 { height:30px; width:30px; color:crimson; background-color:white; }
+			.class4 { height:30px; width:30px; color:crimson; background-color:royalBlue; }
 		</style>
 		
 	</head>
@@ -21,50 +22,48 @@
 			</tbody>
 		</table>
 		
+		<p id = "winnner"> </p>
+		
 		<script type="application/javascript" defer>
-			function create_table() {
+			function elemName(i, j) {
+				return "e_" + i + "_" + j;
+			}
+		
+			function createTable() {
 				let myTable = document.getElementById("myTable");
 				for (let i = 0; i < 10; i++) {
 					let newLine = document.createElement("tr");
 					for (let j = 0; j < 10; j++) {
 						let newElem = document.createElement("td");
-						newElem.id = "e_" + i + "_" + j;
+						newElem.id = elemName(i, j);
 						newElem.align = "center";
-						newElem.classList.add("class2");
-						newElem.coordX = i;
-						newElem.coordY = j;
-						/*
-						if ((i + j) % 2 == 0) {
-							newElem.classList.add("class1");
-						}
-						else {
-							newElem.classList.add("class2");
-						}
-						*/
+						newElem.classList.add("class0");
+						newElem.coordX = i; newElem.coordY = j;
 						newElem.onclick = function() {
 							sendData({type:"player_move", coordX: this.coordX, coordY: this.coordY});
 						};
-						newElem.appendChild(document.createTextNode("X"));
+						newElem.appendChild(document.createTextNode(" "));
 						newLine.appendChild(newElem);
 					}
 					myTable.appendChild(newLine);
 				}
 			}
 			
-			function changeTable(table) {
+			function updateTable(table) {
 				for (let i = 0; i < 10; i++) {
 					for (let j = 0; j < 10; j++) {
-						let s = "e_" + i + "_" + j;
-						let elem = document.getElementById(s);
-						if (table[s] == 0) {
-							elem.className = "class1";
+						let elemId = elemName(i, j);
+						let elem = document.getElementById(elemId);
+						elem.className = "class" + table[elemId];
+						if (table[elemId] == 0) {
+							elem.childNodes[0].nodeValue = " ";
 						}
-						else if (table[s] == 1) {
-							elem.className = "class2";
+						else if (table[elemId] == 1 || table[elemId] == 2) {
+							elem.childNodes[0].nodeValue = "X";
 						}
-						else {
-							console.log(table[s]);
-						}
+						else if (table[elemId] == 3 || table[elemId] == 4) {
+							elem.childNodes[0].nodeValue = "O";
+						}						
 					}
 				}
 			}
@@ -83,21 +82,21 @@
 				}
 				console.log("Код: " + event.code + " причина: " + event.reason);
 			};
+			socket.onerror = function(error) {
+				console.log("Ошибка: " + error.message);
+			};
+			
 			// RECIEVE DATA
 			socket.onmessage = function(event) {
 				console.log("Полученные данные: " + event.data);
 				let mes = JSON.parse(event.data);
-				changeTable(mes);
-				//if (mes.type == "table_request") {
-				//	console.log("it's just need table bruh");
-				//}
-				//else if (mes.type == "player_move") {
-				//	console.log("X = " + mes.coordX + "\ny = " + mes.coordY);
-				//}
+				if (mes.type == "table") {
+					updateTable(mes.table);
+					if (mes.result == "") {
+					
+					}
+				}
 			}
-			socket.onerror = function(error) {
-				console.log("Ошибка: " + error.message);
-			};
 			
 			// SEND DATA
 			function sendData(data) {
@@ -105,7 +104,7 @@
 				socket.send(JSON.stringify(data));
 			}
 			
-			create_table();
+			createTable();
 		</script>
 	</body>
 </html>

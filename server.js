@@ -1,30 +1,40 @@
-
 let gameState = 0;
 // Состояния игры
 // 0 - Игра не началась
 // 1 - Присоединился первый игрок
 // 2 - Присоединился второй игрок (Игра началась)
+let gameStatus = "in process"; // "in process", "result"
+let winner = "";
+let move = 0;
 let firstPlayer = "";
 let secondPlayer = "";
 // Поле
 let gameTable = {};
 
+function elemName(i, j) {
+	return "e_" + i + "_" + j;
+}
+
 function initGameTable() {
 	for (let i = 0; i < 10; i++) {
 		for (let j = 0; j < 10; j++) {
-			gameTable["e_" + i + "_" + j] = 0;
+			gameTable[elemName(i, j)] = 0;
+			//gameTable[elemName(i, j)] = (i + j) % 5; // TEST
+			// 0 - пустая клетка
+			// 1 - x (крестик сделал свой ход)
+			// 2 - xO (кружок перекрыл ход крестика)
+			// 3 - o (кружок сделал свой ход)
+			// 4 - oX (крестик перекрыл ход кружка)
 		}
 	}
-	//console.log(gameTable);
 }
 
 function gameMove(x, y) {
-	gameTable["e_" + x + "_" + y] = 1;
+	gameTable[elemName(x, y)]++;
+	gameTable[elemName(x, y)] %= 5;
 }
 
 initGameTable();
-
-
 
 const express = require("express");
 const http = require("http");
@@ -51,26 +61,32 @@ wss.on("connection", function connection(ws, req) {
 	console.log("new client connected " + instance);
 	console.log("cookie: " + req.headers.cookie)
 	const callback = function(message) {
-		//console.log("in callback: message = " + message);
-		//ws.send(String(message));
-		//console.log("sending to client... " + instance);
-		console.log("in callback: gameTable = XXX")
-		console.log("sending table to client... " + instance);
+		console.log("sending to client... " + instance);
 		ws.send(JSON.stringify(message));
 	}
 	messageEmitter.on("newmessage", callback);
 	ws.on("message", function incoming(message) {
 		console.log("recieved: " + message);
 		let mes = JSON.parse(message);
-		if (mes.type == "table_request") {
-			console.log("it's just need table bruh");
+		//mes.type == "table_request"
+		//mes.type == "player_move", mes.coordX, mes.coordY
+		//mes.type == "history_request"
+		if (mes.type == "table_request" || mes.type == "player_move") {
+			console.log(mes.type + " from " + req.headers.cookie);
+			if (mes.type == "player_move") {
+				console.log("X = " + mes.coordX + "; y = " + mes.coordY + ";");
+				gameMove(mes.coordX, mes.coordY);
+			}
+			let res = {type:"table", table:gameTable, gameStatus:gameStatus};
+			if (gameStatus == "result") {
+				res.winner = winner;
+			}
+			messageEmitter.emit("newmessage", res);
 		}
-		else if (mes.type == "player_move") {
-			console.log("X = " + mes.coordX + "\ny = " + mes.coordY);
-			gameMove(mes.coordX, mes.coordY);
+		else if (mes.type == "history_request") {
+			console.log(mes.type + " from " + req.headers.cookie);
+			// TODO!!!
 		}
-		//messageEmitter.emit("newmessage", message);
-		messageEmitter.emit("newmessage", gameTable);
 	});
 	ws.on("close", function close() {
 		console.log("socket closed for client " + instance);
