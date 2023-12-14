@@ -189,6 +189,25 @@ function updatePlayerCookie(req, res) {
 	}
 }
 
+const sqlite3 = require("sqlite3");
+const db = new sqlite3.Database("./games_history.db", sqlite3.OPEN_READWRITE, (err)=>{
+	if (err) return console.error(err.message);
+});
+
+function initDB() {
+	let sql = "CREATE TABLE IF NOT EXISTS games(id INTEGER PRIMARY KEY, date0, date1, pl1, pl2, winner)";
+	db.run(sql);
+}
+
+initDB();
+
+function pushtoDB(date0, date1, pl1, pl2, winner) {
+	let sql = "INSERT INTO games(date0, date1, pl1, pl2, winner) VALUES (?,?,?,?,?)";
+	dp.run(sql, [date0, date1, pl1, pl2, winner], (err) => {
+		if (err) return console.error(err.message);
+	});
+}
+
 const EE = require("events").EventEmitter;
 const messageEmitter = new EE();
 
