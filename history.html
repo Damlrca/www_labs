@@ -12,12 +12,59 @@
 		
 		<table border="1">
 			<thead>
-				<tr> <th>Дата</th> <th>Время</th> <th>Продолжительность игры</th> <th>Результат игры</th> </tr>
+				<tr> <th>Дата и время начала игры</th> <th>Дата и время конца игры</th> <th>Первый игрок (Х)</th> <th>Второй игрок (O)</th> <th>Победитель</th> </tr>
 			</thead>
-			<tbody>
-				<tr> <td>а</td> <td>б</td> <td>в</td> <td>г</td> </tr>
-				<tr> <td>а</td> <td>б</td> <td>в</td> <td>г</td> </tr>
+			<tbody id="htable">
+				<tr> <td>а</td> <td>б</td> <td>в</td> <td>г</td> <td>д</td> </tr>
+				<tr> <td>а</td> <td>б</td> <td>в</td> <td>г</td> <td>д</td> </tr>
 			</tbody>
 		</table>
+		
+		<script type="application/javascript">
+			function updateHTable(htable) {
+				alert(htable);
+			}
+			
+			let socket = new WebSocket("ws://localhost:8181/ws");
+			socket.onopen = function() {
+				console.log("Соединение установлено. Запрос текущей таблицы.");
+				sendData({type:"history_request"});
+			};
+			socket.onclose = function(event) {
+				if (event.wasClean)
+					console.log("Соединение закрыто чисто");
+				else
+					console.log("Обрыв соединения");
+				console.log("Код: " + event.code + " причина: " + event.reason);
+			};
+			socket.onerror = function(error) {
+				console.log("Ошибка: " + error.message);
+			};
+			
+			// RECIEVE DATA
+			socket.onmessage = function(event) {
+				console.log("Полученны данные: ");
+				let mes = JSON.parse(event.data);
+				console.log("mes.type = " + mes.type + ";");
+				if (mes.type == "htable") {
+					updateHTable(mes.htable);
+				}
+			}
+			
+			// SEND DATA
+			function sendData(data) {
+				console.log("sending: " + JSON.stringify(data));
+				socket.send(JSON.stringify(data));
+			}
+		</script>
+		
+		<p>
+			<button onclick='sendData({type:"history_request"});'>Обновить таблицу</button>
+		</p>
+		
+		<p>
+			<a href="/">Выход на главную страницу</a>
+		</p>
+		
 	</body>
 </html>

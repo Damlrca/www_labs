@@ -28,7 +28,7 @@
 			<a href="/">Выход на главную страницу</a>
 		</p>
 		
-		<script type="application/javascript" defer>
+		<script type="application/javascript">
 			function elemName(i, j) {
 				return "e_" + i + "_" + j;
 			}
@@ -111,7 +111,7 @@
 			
 			// SEND DATA
 			function sendData(data) {
-				console.log("sending: " + data);
+				console.log("sending: " + JSON.stringify(data));
 				socket.send(JSON.stringify(data));
 			}
 			

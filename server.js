@@ -14,12 +14,16 @@ let firstPlayerCanMoveCnt = 0;
 let firstPlayerCanMoveHere = {};
 let secondPlayerCanMoveCnt = 0;
 let secondPlayerCanMoveHere = {};
+
 let dx = [ -1, -1, -1,  0,  0,  1,  1,  1];
 let dy = [ -1,  0,  1, -1,  1, -1,  0,  1];
 
 function elemName(i, j) {
 	return "e_" + i + "_" + j;
 }
+
+let timeOfStart;
+let timeOfEnd;
 
 function initGame() {
 	gameState = 0;
@@ -124,6 +128,9 @@ function gameMove(x, y) {
 	if (move < 3) { // first player
 		if (firstPlayerCanMoveHere[elemName(x, y)] == 1) {
 			if (gameTable[elemName(x, y)] == 0) {
+				if (x == 0 && y == 0) { // Время первого хода
+					timeOfStart = new Date();
+				}
 				gameTable[elemName(x, y)] = 1;
 				move = (move + 1) % 6;
 			}
@@ -208,11 +215,11 @@ wss.on("connection", function connection(ws, req) {
 			if (mes.type == "player_move") {
 				console.log("move {X=" + mes.coordX + "; y=" + mes.coordY + "}");
 				if (move < 3) {
-					if (req.headers.cookie == "player=" + firstPlayer)
+					if (gameState == 2 && req.headers.cookie == "player=" + firstPlayer)
 						gameMove(mes.coordX, mes.coordY);
 				}
 				else {
-					if (req.headers.cookie == "player=" + secondPlayer)
+					if (gameState == 2 && req.headers.cookie == "player=" + secondPlayer)
 						gameMove(mes.coordX, mes.coordY);
 				}
 				
@@ -222,14 +229,19 @@ wss.on("connection", function connection(ws, req) {
 				res.winner = winner;
 			messageEmitter.emit("newmessage", res);
 			if (gameStatus == "result") {
+				// Время последнего хода
+				timeOfEnd = new Date();
 				// send result to DB
+				// [timeOfStart, timeOfEnd, firstPlayer, secondPlayer, winner]
 				// TODO!!!
 				// reset game state
 				initGame();
 			}
 		}
 		else if (mes.type == "history_request") {
+			let res = {type:"htable", htable:"aaaa"};
 			// TODO!!!
+			messageEmitter.emit("newmessage", res);
 		}
 	});
 	ws.on("close", function close() {
