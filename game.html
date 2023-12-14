@@ -22,7 +22,7 @@
 			</tbody>
 		</table>
 		
-		<p id = "winnner"> </p>
+		<p id = "winner"> </p>
 		
 		<script type="application/javascript" defer>
 			function elemName(i, j) {
@@ -92,8 +92,15 @@
 				let mes = JSON.parse(event.data);
 				if (mes.type == "table") {
 					updateTable(mes.table);
-					if (mes.result == "") {
-					
+					if (mes.gameStatus == "result") {
+						let win = document.getElementById("winner");
+						if (document.cookie == "player=" + mes.winner) {
+							win.appendChild(document.createTextNode("Поздравляем, вы победили!"));
+						}
+						else {
+							win.appendChild(document.createTextNode("Вы проиграли!"));
+						}
+						socket.close();
 					}
 				}
 			}

@@ -9,7 +9,9 @@ let firstPlayer = "";
 let secondPlayer = "";
 // Поле
 let gameTable = {};
+let firstPlayerCanMoveCnt = 0;
 let firstPlayerCanMoveHere = {};
+let secondPlayerCanMoveCnt = 0;
 let secondPlayerCanMoveHere = {};
 let move = 0;
 let dx = [ -1, -1, -1,  0,  0,  1,  1,  1];
@@ -19,11 +21,19 @@ function elemName(i, j) {
 	return "e_" + i + "_" + j;
 }
 
+function initGame() {
+	initGameTable();
+	gameState = 0;
+	gameStatus = "in process";
+	winner = "";
+	firstPlayer = "";
+	move = 0;
+}
+
 function initGameTable() {
 	for (let i = 0; i < 10; i++) {
 		for (let j = 0; j < 10; j++) {
 			gameTable[elemName(i, j)] = 0;
-			//gameTable[elemName(i, j)] = (i + j) % 5; // TEST
 			// 0 - пустая клетка
 			// 1 - x (крестик сделал свой ход)
 			// 2 - xO (кружок перекрыл ход крестика)
@@ -38,7 +48,6 @@ function firstDFS(x, y) {
 	for (let i = 0; i < 8; i++) {
 		let X = x + dx[i], Y = y + dy[i];
 		if (0 <= X && X < 10 && 0 <= Y && Y < 10) {
-			console.log("aaaa");
 			if (firstPlayerCanMoveHere[elemName(X, Y)] == 0) {
 				if (gameTable[elemName(X, Y)] == 0 || gameTable[elemName(X, Y)] == 3) {
 					firstPlayerCanMoveHere[elemName(X, Y)] = 1;
@@ -91,8 +100,25 @@ function gameMove(x, y) {
 			}
 		}
 	}
-	console.log(firstPlayerCanMoveHere);
+	firstPlayerCanMoveCnt = 0;
+	secondPlayerCanMoveCnt = 0;
+	for (let i = 0; i < 10; i++) {
+		for (let j = 0; j < 10; j++) {
+			if (firstPlayerCanMoveHere[elemName(i, j)] == 1 &&
+				(gameTable[elemName(x, y)] == 0 || gameTable[elemName(x, y)] == 3)) {
+				firstPlayerCanMoveCnt++;
+			}
+			if (secondPlayerCanMoveHere[elemName(i, j)] == 1 &&
+				(gameTable[elemName(x, y)] == 0 || gameTable[elemName(x, y)] == 1)) {
+				secondPlayerCanMoveCnt++;
+			}
+		}
+	}
 	if (move < 3) {
+		if (firstPlayerCanMoveCnt == 0) {
+			gameStatus = "result";
+			winner = secondPlayer;
+		}
 		if (firstPlayerCanMoveHere[elemName(x, y)] == 1) {
 			if (gameTable[elemName(x, y)] == 0) {
 				gameTable[elemName(x, y)] = 1;
@@ -105,6 +131,10 @@ function gameMove(x, y) {
 		}
 	}
 	else {
+		if (secondPlayerCanMoveCnt == 0) {
+			gameStatus = "result";
+			winner = firstPlayer;
+		}
 		if (secondPlayerCanMoveHere[elemName(x, y)] == 1 && gameTable[elemName(x, y)] != 3) {
 			if (gameTable[elemName(x, y)] == 0) {
 				gameTable[elemName(x, y)] = 3;
@@ -118,7 +148,7 @@ function gameMove(x, y) {
 	}
 }
 
-initGameTable();
+initGame();
 
 const express = require("express");
 const http = require("http");
@@ -176,6 +206,12 @@ wss.on("connection", function connection(ws, req) {
 				res.winner = winner;
 			}
 			messageEmitter.emit("newmessage", res);
+			if (gameStatus == "result") {
+				// отправить информацию в БД
+				// обнулить состояние игры
+				initGame();
+				
+			}
 		}
 		else if (mes.type == "history_request") {
 			console.log(mes.type + " from " + req.headers.cookie);
