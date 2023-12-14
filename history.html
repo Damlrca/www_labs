@@ -14,15 +14,11 @@
 			<thead>
 				<tr> <th>id</th> <th>Дата и время начала игры</th> <th>Дата и время конца игры</th> <th>Первый игрок (Х)</th> <th>Второй игрок (O)</th> <th>Победитель</th> </tr>
 			</thead>
-			<tbody id="htable">
-				<tr> <td>а</td> <td>б</td> <td>в</td> <td>г</td> <td>д</td> </tr>
-				<tr> <td>а</td> <td>б</td> <td>в</td> <td>г</td> <td>д</td> </tr>
-			</tbody>
+			<tbody id="htable"> </tbody>
 		</table>
 		
 		<script type="application/javascript">
 			function updateHTable(htable) {
-				//alert(JSON.parse(htable));
 				let res = document.getElementById("htable");
 				res.replaceChildren();
 				for (let i = 0; i < htable.length; i++) {
