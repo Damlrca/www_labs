@@ -2,18 +2,18 @@ let gameState = 0;
 // Состояния игры
 // 0 - Игра не началась
 // 1 - Присоединился первый игрок
-// 2 - Присоединился второй игрок (Игра началась)
+// 2 - Присоединился второй игрок (или игра уже идёт)
 let gameStatus = "in process"; // "in process", "result"
 let winner = "";
 let firstPlayer = "";
 let secondPlayer = "";
+let move = 0;
 // Поле
 let gameTable = {};
 let firstPlayerCanMoveCnt = 0;
 let firstPlayerCanMoveHere = {};
 let secondPlayerCanMoveCnt = 0;
 let secondPlayerCanMoveHere = {};
-let move = 0;
 let dx = [ -1, -1, -1,  0,  0,  1,  1,  1];
 let dy = [ -1,  0,  1, -1,  1, -1,  0,  1];
 
@@ -22,13 +22,14 @@ function elemName(i, j) {
 }
 
 function initGame() {
-	initGameTable();
 	gameState = 0;
 	gameStatus = "in process";
 	winner = "";
 	firstPlayer = "";
 	secondPlayer = "";
 	move = 0;
+	initGameTable();
+	calcCanMoves();
 }
 
 function initGameTable() {
@@ -40,6 +41,47 @@ function initGameTable() {
 			// 2 - xO (кружок перекрыл ход крестика)
 			// 3 - o (кружок сделал свой ход)
 			// 4 - oX (крестик перекрыл ход кружка)
+		}
+	}
+}
+
+function calcCanMoves() {
+	for (let i = 0; i < 10; i++) {
+		for (let j = 0; j < 10; j++) {
+			firstPlayerCanMoveHere[elemName(i, j)] = 0;
+			secondPlayerCanMoveHere[elemName(i, j)] = 0;
+		}
+	}
+	
+	for (let i = 0; i < 10; i++) {
+		for (let j = 0; j < 10; j++) {
+			if (firstPlayerCanMoveHere[elemName(i, j)] == 0 && gameTable[elemName(i, j)] == 1) {
+				firstDFS(i, j);
+			}
+		}
+	}
+	if (gameTable[elemName(0, 0)] == 0) firstPlayerCanMoveHere[elemName(0, 0)] = 1;
+	
+	for (let i = 0; i < 10; i++) {
+		for (let j = 0; j < 10; j++) {
+			if (secondPlayerCanMoveHere[elemName(i, j)] == 0 && gameTable[elemName(i, j)] == 3) {
+				secondDFS(i, j);
+			}
+		}
+	}
+	if (gameTable[elemName(9, 9)] == 0) secondPlayerCanMoveHere[elemName(9, 9)] = 1;
+	
+	firstPlayerCanMoveCnt = 0;
+	secondPlayerCanMoveCnt = 0;
+	for (let i = 0; i < 10; i++) {
+		for (let j = 0; j < 10; j++) {
+			let gt = gameTable[elemName(i, j)];
+			if (firstPlayerCanMoveHere[elemName(i, j)] == 1 && (gt == 0 || gt == 3)) {
+				firstPlayerCanMoveCnt++;
+			}
+			if (secondPlayerCanMoveHere[elemName(i, j)] == 1 && (gt == 0 || gt == 1)) {
+				secondPlayerCanMoveCnt++;
+			}
 		}
 	}
 }
@@ -79,53 +121,7 @@ function secondDFS(x, y) {
 }
 
 function gameMove(x, y) {
-	for (let i = 0; i < 10; i++) {
-		for (let j = 0; j < 10; j++) {
-			firstPlayerCanMoveHere[elemName(i, j)] = 0;
-			secondPlayerCanMoveHere[elemName(i, j)] = 0;
-		}
-	}
-	
-	for (let i = 0; i < 10; i++) {
-		for (let j = 0; j < 10; j++) {
-			if (firstPlayerCanMoveHere[elemName(i, j)] == 0 && gameTable[elemName(i, j)] == 1) {
-				firstDFS(i, j);
-			}
-		}
-	}
-	if (gameTable[elemName(0, 0)] == 0) firstPlayerCanMoveHere[elemName(0, 0)] = 1;
-	
-	for (let i = 0; i < 10; i++) {
-		for (let j = 0; j < 10; j++) {
-			if (secondPlayerCanMoveHere[elemName(i, j)] == 0 && gameTable[elemName(i, j)] == 3) {
-				secondDFS(i, j);
-			}
-		}
-	}
-	if (gameTable[elemName(9, 9)] == 0) secondPlayerCanMoveHere[elemName(9, 9)] = 1;
-	
-	firstPlayerCanMoveCnt = 0;
-	secondPlayerCanMoveCnt = 0;
-	for (let i = 0; i < 10; i++) {
-		for (let j = 0; j < 10; j++) {
-			let gt = gameTable[elemName(i, j)];
-			if (firstPlayerCanMoveHere[elemName(i, j)] == 1 && (gt == 0 || gt == 3)) {
-				firstPlayerCanMoveCnt++;
-			}
-			if (secondPlayerCanMoveHere[elemName(i, j)] == 1 && (gt == 0 || gt == 1)) {
-				secondPlayerCanMoveCnt++;
-			}
-		}
-	}
-	
-	console.log("firstPlayerCanMoveCnt " + firstPlayerCanMoveCnt);
-	console.log(firstPlayerCanMoveHere);
-	
 	if (move < 3) { // first player
-		if (firstPlayerCanMoveCnt == 0) {
-			gameStatus = "result";
-			winner = secondPlayer;
-		}
 		if (firstPlayerCanMoveHere[elemName(x, y)] == 1) {
 			if (gameTable[elemName(x, y)] == 0) {
 				gameTable[elemName(x, y)] = 1;
@@ -138,10 +134,6 @@ function gameMove(x, y) {
 		}
 	}
 	else { // second player
-		if (secondPlayerCanMoveCnt == 0) {
-			gameStatus = "result";
-			winner = firstPlayer;
-		}
 		if (secondPlayerCanMoveHere[elemName(x, y)] == 1) {
 			if (gameTable[elemName(x, y)] == 0) {
 				gameTable[elemName(x, y)] = 3;
@@ -153,6 +145,21 @@ function gameMove(x, y) {
 			}
 		}
 	}
+	
+	calcCanMoves();
+	
+	if (move < 3) { // first player (next move)
+		if (firstPlayerCanMoveCnt == 0) {
+			gameStatus = "result";
+			winner = secondPlayer;
+		}
+	}
+	else { // second player (next move)
+		if (secondPlayerCanMoveCnt == 0) {
+			gameStatus = "result";
+			winner = firstPlayer;
+		}
+	}
 }
 
 initGame();
@@ -162,74 +169,7 @@ const http = require("http");
 const fs = require("fs");
 const cookieParser = require("cookie-parser");
 const WebSocket = require("ws");
-const bodyParser = require("body-parser")
 const app = express();
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-
-const EE = require("events").EventEmitter;
-const messageEmitter = new EE();
-
-var server = http.createServer(app);
-var wss = new WebSocket.Server({server});
-server.listen(8181, function listening() {
-	console.log("listening on port " + server.address().port);
-});
-let numberOfClients = 0;
-wss.on("connection", function connection(ws, req) {
-	let instance = numberOfClients++;
-	console.log("new client connected " + instance);
-	console.log("cookie: " + req.headers.cookie)
-	const callback = function(message) {
-		console.log("sending to client... " + instance);
-		ws.send(JSON.stringify(message));
-	}
-	messageEmitter.on("newmessage", callback);
-	ws.on("message", function incoming(message) {
-		console.log("recieved: " + message);
-		let mes = JSON.parse(message);
-		//mes.type == "table_request"
-		//mes.type == "player_move", mes.coordX, mes.coordY
-		//mes.type == "history_request"
-		if (mes.type == "table_request" || mes.type == "player_move") {
-			console.log(mes.type + " from " + req.headers.cookie);
-			if (mes.type == "player_move") {
-				console.log("X = " + mes.coordX + "; y = " + mes.coordY + ";");
-				if (move < 3) {
-					if (req.headers.cookie == "player=" + firstPlayer) {
-						gameMove(mes.coordX, mes.coordY);
-					}
-				}
-				else {
-					if (req.headers.cookie == "player=" + secondPlayer) {
-						gameMove(mes.coordX, mes.coordY);
-					}
-				}
-				
-			}
-			let res = {type:"table", table:gameTable, gameStatus:gameStatus};
-			if (gameStatus == "result") {
-				res.winner = winner;
-			}
-			messageEmitter.emit("newmessage", res);
-			if (gameStatus == "result") {
-				// отправить информацию в БД
-				// обнулить состояние игры
-				initGame();
-				
-			}
-		}
-		else if (mes.type == "history_request") {
-			console.log(mes.type + " from " + req.headers.cookie);
-			// TODO!!!
-		}
-	});
-	ws.on("close", function close() {
-		console.log("socket closed for client " + instance);
-		messageEmitter.off("newmessage", callback);
-	});
-});
 
 app.use(cookieParser());
 let playersCount = 0;
@@ -242,6 +182,62 @@ function updatePlayerCookie(req, res) {
 	}
 }
 
+const EE = require("events").EventEmitter;
+const messageEmitter = new EE();
+
+var server = http.createServer(app);
+var wss = new WebSocket.Server({server});
+server.listen(8181, function listening() {
+	console.log("listening on port " + server.address().port);
+});
+wss.on("connection", function connection(ws, req) {
+	console.log("new client connected. cookie: " + req.headers.cookie);
+	const callback = function(message) {
+		console.log("sending to client. cookie: " + req.headers.cookie);
+		ws.send(JSON.stringify(message));
+	}
+	messageEmitter.on("newmessage", callback);
+	ws.on("message", function incoming(message) {
+		console.log("receiving: " + req.headers.cookie);
+		let mes = JSON.parse(message);
+		console.log("received: mes.type = " + mes.type);
+		//mes.type == "table_request"
+		//mes.type == "player_move", mes.coordX, mes.coordY
+		//mes.type == "history_request"
+		if (mes.type == "table_request" || mes.type == "player_move") {
+			if (mes.type == "player_move") {
+				console.log("move {X=" + mes.coordX + "; y=" + mes.coordY + "}");
+				if (move < 3) {
+					if (req.headers.cookie == "player=" + firstPlayer)
+						gameMove(mes.coordX, mes.coordY);
+				}
+				else {
+					if (req.headers.cookie == "player=" + secondPlayer)
+						gameMove(mes.coordX, mes.coordY);
+				}
+				
+			}
+			let res = {type:"table", table:gameTable, gameStatus:gameStatus};
+			if (gameStatus == "result")
+				res.winner = winner;
+			messageEmitter.emit("newmessage", res);
+			if (gameStatus == "result") {
+				// send result to DB
+				// TODO!!!
+				// reset game state
+				initGame();
+			}
+		}
+		else if (mes.type == "history_request") {
+			// TODO!!!
+		}
+	});
+	ws.on("close", function close() {
+		console.log("socket closed for client. cookie: " + req.headers.cookie);
+		messageEmitter.off("newmessage", callback);
+	});
+});
+
 app.get("/", function(req, res) {
 	data = fs.readFileSync("index.html");
 	res.end(data);
@@ -250,8 +246,8 @@ app.get("/", function(req, res) {
 app.get("/game.html", function(req, res) {
 	updatePlayerCookie(req, res);
 	let player = req.cookies["player"];
-	if (player !== firstPlayer && player !== secondPlayer) {
-		res.redirect("/error.html?error=Вы+не+правильный+игрок");
+	if (player != firstPlayer && player != secondPlayer) {
+		res.redirect("/error.html?error=Вы+не+участвуете+в+текущей+игре");
 	}
 	else {
 		data = fs.readFileSync("game.html");
@@ -264,16 +260,16 @@ app.get("/startgame", function(req, res) {
 	let player = req.cookies["player"];
 	if (gameState != 0) {
 		if (gameState == 1) {
-			res.redirect("/error.html?error=Первый+игрок+уже+присоединился");
+			res.redirect("/error.html?error=Первый+игрок+уже+присоединился+к+игре");
 		}
 		else if (gameState == 2) {
-			res.redirect("/error.html?error=Игра+уже+началась");
+			res.redirect("/error.html?error=Оба+игрока+уже+присоединились+к+игре");
 		}
 	}
 	else {
 		firstPlayer = player;
 		gameState = 1;
-		console.log("Первый игрок (" + player + ")присоединился к игре: ");
+		console.log("Первый игрок (" + player + ")присоединился к игре.");
 		res.redirect("/game.html");
 	}
 });
@@ -282,18 +278,18 @@ app.get("/joingame", function(req, res) {
 	updatePlayerCookie(req, res);
 	let player = req.cookies["player"];
 	if (gameState == 2) {
-		res.redirect("/error.html?error=Игра+уже+идёт");
+		res.redirect("/error.html?error=Оба+игрока+уже+присоединились+к+игре");
 	}
 	else if (gameState == 0) {
-		res.redirect("/error.html?error=Первый+игрок+ещё+не+присоединился");
+		res.redirect("/error.html?error=Первый+игрок+ещё+не+присоединился+к+игре");
 	}
 	else if (firstPlayer == player) {
-		res.redirect("/error.html?error=Вы+уже+первый+игрок");
+		res.redirect("/error.html?error=Вы+уже+являеетесь+первым+игроком");
 	}
 	else {
 		secondPlayer = player;
 		gameState = 2;
-		console.log("Второй игрок (" + player + ")присоединился к игре: ");
+		console.log("Второй игрок (" + player + ")присоединился к игре.");
 		res.redirect("/game.html");
 	}
 });

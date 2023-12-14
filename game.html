@@ -22,10 +22,10 @@
 			</tbody>
 		</table>
 		
-		<p id = "winner"> </p>
+		<p id = "result"> </p>
 		
 		<p>
-			<a href="/">Выход в главное меню</a>
+			<a href="/">Выход на главную страницу</a>
 		</p>
 		
 		<script type="application/javascript" defer>
@@ -74,16 +74,14 @@
 			
 			let socket = new WebSocket("ws://localhost:8181/ws");
 			socket.onopen = function() {
-				console.log("Соединение установлено.\nЗапрос текущей таблицы.");
+				console.log("Соединение установлено. Запрос текущей таблицы.");
 				sendData({type:"table_request"});
 			};
 			socket.onclose = function(event) {
-				if (event.wasClean) {
+				if (event.wasClean)
 					console.log("Соединение закрыто чисто");
-				}
-				else {
+				else
 					console.log("Обрыв соединения");
-				}
 				console.log("Код: " + event.code + " причина: " + event.reason);
 			};
 			socket.onerror = function(error) {
@@ -92,17 +90,19 @@
 			
 			// RECIEVE DATA
 			socket.onmessage = function(event) {
-				console.log("Полученные данные: " + event.data);
+				console.log("Полученны данные: ");
 				let mes = JSON.parse(event.data);
+				console.log("mes.type = " + mes.type + "; mes.gameStatus = " + mes.gameStatus + ";");
 				if (mes.type == "table") {
 					updateTable(mes.table);
 					if (mes.gameStatus == "result") {
-						let win = document.getElementById("winner");
+						console.log("mes.winner = " + mes.winner + ";");
+						let res = document.getElementById("result");
 						if (document.cookie == "player=" + mes.winner) {
-							win.appendChild(document.createTextNode("Поздравляем, вы победили!"));
+							res.appendChild(document.createTextNode("Вы победили!"));
 						}
 						else {
-							win.appendChild(document.createTextNode("Вы проиграли!"));
+							res.appendChild(document.createTextNode("Вы проиграли!"));
 						}
 						socket.close();
 					}
@@ -111,7 +111,7 @@
 			
 			// SEND DATA
 			function sendData(data) {
-				console.log("sending: " + JSON.stringify(data));
+				console.log("sending: " + data);
 				socket.send(JSON.stringify(data));
 			}
 			
