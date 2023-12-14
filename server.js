@@ -27,6 +27,7 @@ function initGame() {
 	gameStatus = "in process";
 	winner = "";
 	firstPlayer = "";
+	secondPlayer = "";
 	move = 0;
 }
 
@@ -84,7 +85,7 @@ function gameMove(x, y) {
 			secondPlayerCanMoveHere[elemName(i, j)] = 0;
 		}
 	}
-	if (gameTable[elemName(0, 0)] == 0) firstPlayerCanMoveHere[elemName(0, 0)] = 1;
+	
 	for (let i = 0; i < 10; i++) {
 		for (let j = 0; j < 10; j++) {
 			if (firstPlayerCanMoveHere[elemName(i, j)] == 0 && gameTable[elemName(i, j)] == 1) {
@@ -92,7 +93,8 @@ function gameMove(x, y) {
 			}
 		}
 	}
-	if (gameTable[elemName(9, 9)] == 0) secondPlayerCanMoveHere[elemName(9, 9)] = 1;
+	if (gameTable[elemName(0, 0)] == 0) firstPlayerCanMoveHere[elemName(0, 0)] = 1;
+	
 	for (let i = 0; i < 10; i++) {
 		for (let j = 0; j < 10; j++) {
 			if (secondPlayerCanMoveHere[elemName(i, j)] == 0 && gameTable[elemName(i, j)] == 3) {
@@ -100,21 +102,26 @@ function gameMove(x, y) {
 			}
 		}
 	}
+	if (gameTable[elemName(9, 9)] == 0) secondPlayerCanMoveHere[elemName(9, 9)] = 1;
+	
 	firstPlayerCanMoveCnt = 0;
 	secondPlayerCanMoveCnt = 0;
 	for (let i = 0; i < 10; i++) {
 		for (let j = 0; j < 10; j++) {
-			if (firstPlayerCanMoveHere[elemName(i, j)] == 1 &&
-				(gameTable[elemName(x, y)] == 0 || gameTable[elemName(x, y)] == 3)) {
+			let gt = gameTable[elemName(i, j)];
+			if (firstPlayerCanMoveHere[elemName(i, j)] == 1 && (gt == 0 || gt == 3)) {
 				firstPlayerCanMoveCnt++;
 			}
-			if (secondPlayerCanMoveHere[elemName(i, j)] == 1 &&
-				(gameTable[elemName(x, y)] == 0 || gameTable[elemName(x, y)] == 1)) {
+			if (secondPlayerCanMoveHere[elemName(i, j)] == 1 && (gt == 0 || gt == 1)) {
 				secondPlayerCanMoveCnt++;
 			}
 		}
 	}
-	if (move < 3) {
+	
+	console.log("firstPlayerCanMoveCnt " + firstPlayerCanMoveCnt);
+	console.log(firstPlayerCanMoveHere);
+	
+	if (move < 3) { // first player
 		if (firstPlayerCanMoveCnt == 0) {
 			gameStatus = "result";
 			winner = secondPlayer;
@@ -130,12 +137,12 @@ function gameMove(x, y) {
 			}
 		}
 	}
-	else {
+	else { // second player
 		if (secondPlayerCanMoveCnt == 0) {
 			gameStatus = "result";
 			winner = firstPlayer;
 		}
-		if (secondPlayerCanMoveHere[elemName(x, y)] == 1 && gameTable[elemName(x, y)] != 3) {
+		if (secondPlayerCanMoveHere[elemName(x, y)] == 1) {
 			if (gameTable[elemName(x, y)] == 0) {
 				gameTable[elemName(x, y)] = 3;
 				move = (move + 1) % 6;
