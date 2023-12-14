@@ -12,7 +12,7 @@
 		
 		<table border="1">
 			<thead>
-				<tr> <th>Дата и время начала игры</th> <th>Дата и время конца игры</th> <th>Первый игрок (Х)</th> <th>Второй игрок (O)</th> <th>Победитель</th> </tr>
+				<tr> <th>id</th> <th>Дата и время начала игры</th> <th>Дата и время конца игры</th> <th>Первый игрок (Х)</th> <th>Второй игрок (O)</th> <th>Победитель</th> </tr>
 			</thead>
 			<tbody id="htable">
 				<tr> <td>а</td> <td>б</td> <td>в</td> <td>г</td> <td>д</td> </tr>
@@ -22,7 +22,31 @@
 		
 		<script type="application/javascript">
 			function updateHTable(htable) {
-				alert(htable);
+				//alert(JSON.parse(htable));
+				let res = document.getElementById("htable");
+				res.replaceChildren();
+				for (let i = 0; i < htable.length; i++) {
+					let newLine = document.createElement("tr");
+					let t1 = document.createElement("td");
+					t1.appendChild(document.createTextNode(htable[i].id));
+					newLine.appendChild(t1);
+					let t2 = document.createElement("td");
+					t2.appendChild(document.createTextNode(htable[i].date0));
+					newLine.appendChild(t2);
+					let t3 = document.createElement("td");
+					t3.appendChild(document.createTextNode(htable[i].date1));
+					newLine.appendChild(t3);
+					let t4 = document.createElement("td");
+					t4.appendChild(document.createTextNode(htable[i].pl1));
+					newLine.appendChild(t4);
+					let t5 = document.createElement("td");
+					t5.appendChild(document.createTextNode(htable[i].pl2));
+					newLine.appendChild(t5);
+					let t6 = document.createElement("td");
+					t6.appendChild(document.createTextNode(htable[i].winner));
+					newLine.appendChild(t6);
+					res.appendChild(newLine);
+				}
 			}
 			
 			let socket = new WebSocket("ws://localhost:8181/ws");
@@ -43,7 +67,7 @@
 			
 			// RECIEVE DATA
 			socket.onmessage = function(event) {
-				console.log("Полученны данные: ");
+				console.log("Получены данные: ");
 				let mes = JSON.parse(event.data);
 				console.log("mes.type = " + mes.type + ";");
 				if (mes.type == "htable") {

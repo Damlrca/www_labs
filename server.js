@@ -203,7 +203,7 @@ initDB();
 
 function pushtoDB(date0, date1, pl1, pl2, winner) {
 	let sql = "INSERT INTO games(date0, date1, pl1, pl2, winner) VALUES (?,?,?,?,?)";
-	dp.run(sql, [date0, date1, pl1, pl2, winner], (err) => {
+	db.run(sql, [date0, date1, pl1, pl2, winner], (err) => {
 		if (err) return console.error(err.message);
 	});
 }
@@ -252,15 +252,22 @@ wss.on("connection", function connection(ws, req) {
 				timeOfEnd = new Date();
 				// send result to DB
 				// [timeOfStart, timeOfEnd, firstPlayer, secondPlayer, winner]
-				// TODO!!!
+				let a = timeOfStart.toLocaleString();
+				let b = timeOfEnd.toLocaleString();
+				pushtoDB(a, b, firstPlayer, secondPlayer, winner);
 				// reset game state
 				initGame();
 			}
 		}
 		else if (mes.type == "history_request") {
-			let res = {type:"htable", htable:"aaaa"};
-			// TODO!!!
-			messageEmitter.emit("newmessage", res);
+			function getfromDB() {
+				let sql = "SELECT * FROM games";
+				db.all(sql, [], (err, rows) => {
+					if (err) return console.error(err.message);
+					let res = {type:"htable", htable:rows};
+					messageEmitter.emit("newmessage", res);
+			})};
+			getfromDB();
 		}
 	});
 	ws.on("close", function close() {

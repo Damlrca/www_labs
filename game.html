@@ -90,7 +90,7 @@
 			
 			// RECIEVE DATA
 			socket.onmessage = function(event) {
-				console.log("Полученны данные: ");
+				console.log("Получены данные: ");
 				let mes = JSON.parse(event.data);
 				console.log("mes.type = " + mes.type + "; mes.gameStatus = " + mes.gameStatus + ";");
 				if (mes.type == "table") {
