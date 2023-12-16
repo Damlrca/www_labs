@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Lab1_fi3_Sadikov</title>
+		<meta name="author" compact="Sadikov Damir">
+		<meta charset="UTF-8">
+		<script type="application/javascript" src="lab1.js"></script>
+	</head>
+	<body>
+		<h1>Lab1_fi3_Sadikov</h1>
+		<p>Задача лабораторной работы:<br>Создайте страницу, содержащую текстовое поле. Создайте скрипт, который при вводе текста в текстовое поле под текстовым полем отображает список вариантов автозавершения. У вас есть заданный в тексте программы массив возможных вариантов, и показывать нужно те из них, которые начинаются с вводимого текста. Когда пользователь щёлкает по предложенному варианту, он меняет содержимое поля на него.</p>
+		<textarea id="myTextarea" onkeyup="updateText()" oninput="updateText()" autofocus rows="5" cols="70" placeholder="Начните вводить текст"></textarea>
+		<fieldset>
+			<legend>Варианты автозавершения</legend>
+			<div id="myDiv"></div>
+		</fieldset>
+	</body>
+</html>
